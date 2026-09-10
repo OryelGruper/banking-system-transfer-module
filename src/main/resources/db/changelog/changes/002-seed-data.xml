@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-01-seed-accounts" author="fib">
+        <insert tableName="accounts">
+            <column name="iban" value="BG01FINV001"/>
+            <column name="owner" value="Ivan Petrov"/>
+            <column name="currency" value="USD"/>
+            <column name="balance" valueNumeric="10000.00"/>
+            <column name="version" valueNumeric="0"/>
+        </insert>
+        <insert tableName="accounts">
+            <column name="iban" value="BG01FINV002"/>
+            <column name="owner" value="Maria Koleva"/>
+            <column name="currency" value="EUR"/>
+            <column name="balance" valueNumeric="5000.00"/>
+            <column name="version" valueNumeric="0"/>
+        </insert>
+        <insert tableName="accounts">
+            <column name="iban" value="BG01FINV003"/>
+            <column name="owner" value="Georgi Ivanov"/>
+            <column name="currency" value="USD"/>
+            <column name="balance" valueNumeric="2500.00"/>
+            <column name="version" valueNumeric="0"/>
+        </insert>
+        <insert tableName="accounts">
+            <column name="iban" value="BG01FINV004"/>
+            <column name="owner" value="Elena Todorova"/>
+            <column name="currency" value="EUR"/>
+            <column name="balance" valueNumeric="8000.00"/>
+            <column name="version" valueNumeric="0"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

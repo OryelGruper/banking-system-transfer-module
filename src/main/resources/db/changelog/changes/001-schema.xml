@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001-01-create-accounts" author="fib">
+        <createTable tableName="accounts">
+            <column name="iban" type="VARCHAR(34)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="owner" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="balance" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="001-02-create-transfers" author="fib">
+        <createTable tableName="transfers">
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="source_iban" type="VARCHAR(34)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_iban" type="VARCHAR(34)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_amount" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_currency" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_amount" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_currency" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fx_rate_applied" type="NUMERIC(19,6)"/>
+            <column name="standing_order_id" type="VARCHAR(36)"/>
+            <column name="correlation_id" type="VARCHAR(64)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_transfers_source_created" tableName="transfers">
+            <column name="source_iban"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="001-03-create-ledger-entries" author="fib">
+        <createTable tableName="ledger_entries">
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="transfer_id" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_iban" type="VARCHAR(34)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entry_type" type="VARCHAR(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="ledger_entries" baseColumnNames="transfer_id"
+                                  constraintName="fk_ledger_transfer"
+                                  referencedTableName="transfers" referencedColumnNames="id"/>
+        <createIndex indexName="idx_ledger_account_created" tableName="ledger_entries">
+            <column name="account_iban"/>
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex indexName="idx_ledger_type" tableName="ledger_entries">
+            <column name="entry_type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="001-04-create-standing-orders" author="fib">
+        <createTable tableName="standing_orders">
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="source_iban" type="VARCHAR(34)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_iban" type="VARCHAR(34)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="NUMERIC(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cron_expression" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_executed_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="last_failure_message" type="VARCHAR(500)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="001-05-create-idempotency-records" author="fib">
+        <createTable tableName="idempotency_records">
+            <column name="idempotency_key" type="VARCHAR(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="request_path" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response_body" type="CLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="001-06-create-shedlock" author="fib">
+        <!-- Required by ShedLock (shedlock-provider-jdbc-template) to coordinate
+             the standing-order scheduler across multiple application instances. -->
+        <createTable tableName="shedlock">
+            <column name="name" type="VARCHAR(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="lock_until" type="TIMESTAMP(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="locked_at" type="TIMESTAMP(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="locked_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
