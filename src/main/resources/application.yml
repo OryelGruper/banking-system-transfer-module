@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: banking-system-transfer-module
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:h2:mem:transferdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+  jackson:
+    default-property-inclusion: non_null
+
+# Application-specific configuration. All values are overridable via
+# environment variables (see docker-compose.yml) or a profile-specific
+# application-*.yml — nothing here is hardcoded into Java source.
+app:
+  security:
+    api-key: ${FIB_API_KEY:local-dev-secret-change-me}
+  fx:
+    # currency code -> units per 1 USD (see FxRateProvider). Add a
+    # currency with one more line here, plus a Currency enum value.
+    rates:
+      EUR: ${FX_RATE_USD_TO_EUR:0.86}
+  transfer:
+    daily-limit: ${TRANSFER_DAILY_LIMIT:20000}
+  idempotency:
+    ttl-hours: ${IDEMPOTENCY_TTL_HOURS:24}
+  standing-order:
+    poll-interval-ms: ${STANDING_ORDER_POLL_INTERVAL_MS:60000}
+
+logging:
+  config: classpath:log4j2.xml

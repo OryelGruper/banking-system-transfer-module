@@ -1,0 +1,21 @@
+services:
+  banking-system-transfer-module:
+    build: .
+    image: banking-system-transfer-module:latest
+    container_name: banking-system-transfer-module
+    ports:
+      - "8080:8080"
+    environment:
+      # Never hardcoded in source -- injected here, or point this at a
+      # secrets manager / vault path in a real deployment.
+      FIB_API_KEY: "local-dev-secret-change-me"
+      FX_RATE_USD_TO_EUR: "0.86"
+      TRANSFER_DAILY_LIMIT: "20000"
+      IDEMPOTENCY_TTL_HOURS: "24"
+      STANDING_ORDER_POLL_INTERVAL_MS: "60000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
