@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 670 1360" role="img" aria-label="Flow diagram of a transfer request: ApiKeyAuthFilter and CorrelationIdFilter, then TransferController.execute, then TransferService.execute running inside one @Transactional boundary that checks idempotency, validates the request, locks both accounts, checks the daily limit and balance, converts currency, debits and credits, saves the accounts, transfer and ledger entries, and stores the idempotency record — ending in either a 201 Created response or, if any step throws, a rolled-back transaction and a 4xx error from GlobalExceptionHandler.">
+
+  <style>
+    .box-label { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; font-size: 13px; fill: #1C1E22; }
+    .box-desc { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; fill: #63656C; }
+    .lane-label { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; font-size: 11px; letter-spacing: 0.08em; fill: #63656C; }
+    .boundary-label { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; font-size: 12.5px; fill: #34449A; }
+    .boundary-sub { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; fill: #63656C; font-style: italic; }
+    .branch-label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 500; font-size: 11px; }
+    .term-label { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; font-size: 14px; }
+    .term-desc { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; fill: #63656C; }
+  </style>
+
+  <!-- background -->
+  <rect x="0" y="0" width="670" height="1360" fill="#F5F4EF"></rect>
+
+  <!-- arrowhead markers -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1C1E22"></path>
+    </marker>
+    <marker id="arrowAccent" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#34449A"></path>
+    </marker>
+    <marker id="arrowDanger" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#A5392B"></path>
+    </marker>
+  </defs>
+
+  <!-- HTTP lane -->
+  <rect x="10" y="40" width="640" height="176" rx="12" fill="#EBE8E0"></rect>
+  <text class="lane-label" x="30" y="58">HTTP LAYER</text>
+
+  <rect x="60" y="72" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="96">ApiKeyAuthFilter</text>
+  <text class="box-desc" x="80" y="114">checks X-FIB-AUTH → 401 if invalid</text>
+
+  <line x1="260" y1="130" x2="260" y2="146" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="148" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="172">CorrelationIdFilter</text>
+  <text class="box-desc" x="80" y="190">stamps correlationId into ThreadContext</text>
+
+  <!-- Controller lane -->
+  <rect x="10" y="222" width="640" height="94" rx="12" fill="#EBE8E0"></rect>
+  <text class="lane-label" x="30" y="240">CONTROLLER</text>
+
+  <line x1="260" y1="206" x2="260" y2="252" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="254" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="278">TransferController.execute()</text>
+  <text class="box-desc" x="80" y="296">@Valid body + validates idempotency key</text>
+
+  <line x1="260" y1="312" x2="260" y2="338" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <!-- Transaction boundary -->
+  <rect x="30" y="330" width="580" height="904" rx="16" fill="rgba(52, 68, 154, 0.07)" stroke="#34449A" stroke-width="2" stroke-dasharray="7 6"></rect>
+  <text class="boundary-label" x="50" y="354">TransferService.execute() — @Transactional</text>
+  <text class="boundary-sub" x="50" y="370">everything below commits together, or not at all</text>
+
+  <!-- T1 idempotency check -->
+  <rect x="56" y="384" width="8" height="58" fill="#34449A"></rect>
+  <rect x="60" y="384" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#34449A"></rect>
+  <text class="box-label" x="80" y="408">idempotencyService.findExisting(key)</text>
+  <text class="box-desc" x="80" y="426">seen this key before (not expired)?</text>
+
+  <line x1="260" y1="442" x2="260" y2="458" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+  <text class="branch-label" x="276" y="453" fill="#63656C" font-size="10">no</text>
+
+  <!-- T2..T10 performTransfer chain -->
+  <rect x="60" y="460" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="484">Validate request</text>
+  <text class="box-desc" x="80" y="502">amount &gt; 0, source ≠ destination</text>
+  <line x1="260" y1="518" x2="260" y2="534" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="536" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="560">Lock both accounts</text>
+  <text class="box-desc" x="80" y="578">findByIbanForUpdate ×2, fixed IBAN order</text>
+  <line x1="260" y1="594" x2="260" y2="610" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="612" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="636">Check daily limit</text>
+  <text class="box-desc" x="80" y="654">sum(today’s DEBITs) + amount ≤ limit</text>
+  <line x1="260" y1="670" x2="260" y2="686" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="688" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="712">Check balance</text>
+  <text class="box-desc" x="80" y="730">source.getBalance() ≥ amount</text>
+  <line x1="260" y1="746" x2="260" y2="762" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="764" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="788">Convert via FxRateProvider</text>
+  <text class="box-desc" x="80" y="806">convert(…) + rateFrom(…) for the rate</text>
+  <line x1="260" y1="822" x2="260" y2="838" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="840" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="864">Debit source / credit destination</text>
+  <text class="box-desc" x="80" y="882">in-memory BigDecimal arithmetic</text>
+  <line x1="260" y1="898" x2="260" y2="914" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="916" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="940">Save both accounts</text>
+  <text class="box-desc" x="80" y="958">accountRepository.save() ×2</text>
+  <line x1="260" y1="974" x2="260" y2="990" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="992" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="1016">Save the Transfer row</text>
+  <text class="box-desc" x="80" y="1034">id, amounts, currencies, fx rate, correlationId</text>
+  <line x1="260" y1="1050" x2="260" y2="1066" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <rect x="60" y="1068" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="1092">Save 2 ledger entries</text>
+  <text class="box-desc" x="80" y="1110">DEBIT (source) + CREDIT (destination)</text>
+  <line x1="260" y1="1126" x2="260" y2="1150" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <!-- T11 store idempotency -->
+  <rect x="60" y="1152" width="400" height="58" rx="8" fill="#FFFFFF" stroke="#CDC9BC"></rect>
+  <text class="box-label" x="80" y="1176">idempotencyService.store(…)</text>
+  <text class="box-desc" x="80" y="1194">serialize response → save IdempotencyRecord</text>
+
+  <!-- exit to success -->
+  <line x1="260" y1="1210" x2="260" y2="1268" stroke="#1C1E22" stroke-opacity="0.55" marker-end="url(#arrow)"></line>
+
+  <!-- cache-hit branch -->
+  <polyline points="460,413 580,413 580,1305 392,1305" fill="none" stroke="#34449A" stroke-width="1.6" stroke-dasharray="5 5" marker-end="url(#arrowAccent)"></polyline>
+  <text class="branch-label" x="466" y="403" fill="#34449A">cache hit</text>
+  <text class="box-desc" x="466" y="438" fill="#34449A">skip everything below</text>
+
+  <!-- rollback branch -->
+  <polyline points="460,830 615,830 615,1250 517,1250 517,1268" fill="none" stroke="#A5392B" stroke-width="1.6" stroke-dasharray="5 5" marker-end="url(#arrowDanger)"></polyline>
+  <text class="branch-label" x="470" y="820" fill="#A5392B">any step throws</text>
+  <text class="box-desc" x="470" y="855" fill="#A5392B">log.warn → rethrow → rollback</text>
+
+  <!-- terminal outcomes -->
+  <rect x="130" y="1270" width="262" height="70" rx="10" fill="rgba(30, 107, 68, 0.08)" stroke="#1E6B44" stroke-width="2"></rect>
+  <text class="term-label" x="150" y="1300" fill="#1E6B44">201 Created</text>
+  <text class="term-desc" x="150" y="1318">TransferResponse — committed</text>
+
+  <rect x="400" y="1270" width="230" height="70" rx="10" fill="rgba(165, 57, 43, 0.08)" stroke="#A5392B" stroke-width="2"></rect>
+  <text class="term-label" x="418" y="1300" fill="#A5392B">4xx error</text>
+  <text class="term-desc" x="418" y="1318">GlobalExceptionHandler → JSON</text>
+
+</svg>
