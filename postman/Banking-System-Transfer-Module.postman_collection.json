@@ -1,5 +1,6 @@
 {
   "info": {
+    "_postman_id": "c01ada69-2eef-45d9-b715-ff238ba27954",
     "name": "Banking System Transfer Module",
     "description": "Inter-Account Transfer & Standing Order Module -- covers every endpoint in the API specification.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"

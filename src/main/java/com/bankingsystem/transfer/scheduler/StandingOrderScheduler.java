@@ -46,7 +46,7 @@ public class StandingOrderScheduler {
         for (StandingOrder order : activeOrders) {
             try {
                 if (isDue(order, now)) {
-                    log.info("Standing order {} is due -- executing", order.getId());
+                    log.info("Standing order {} is due, executing", order.getId());
                     transferService.executeForStandingOrder(order);
                     order.recordSuccess(Instant.now());
                     standingOrderRepository.save(order);

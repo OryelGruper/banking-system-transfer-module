@@ -18,6 +18,7 @@ import com.bankingsystem.transfer.repository.LedgerEntryRepository;
 import com.bankingsystem.transfer.repository.TransferRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,7 +72,7 @@ public class TransferService {
     public TransferResponse execute(TransferRequest request, String idempotencyKey) {
         Optional<TransferResponse> existing = idempotencyService.findExisting(idempotencyKey);
         if (existing.isPresent()) {
-            log.info("Idempotency key {} already processed -- returning original response without re-executing", idempotencyKey);
+            log.info("Idempotency key {} already processed, returning the stored response instead of re-executing", idempotencyKey);
             return existing.get();
         }
 
@@ -142,7 +143,7 @@ public class TransferService {
                     amount, source.getCurrency(),
                     destinationAmount, destination.getCurrency(),
                     fxRateApplied, standingOrderId,
-                    org.apache.logging.log4j.ThreadContext.get("correlationId"),
+                    ThreadContext.get("correlationId"),
                     now
             );
             transferRepository.save(transfer);
